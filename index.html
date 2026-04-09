@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VapeTrip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-shell">
+    <aside class="side-panel" id="sidePanel">
+      <div class="side-panel__header">
+        <span class="eyebrow">Настройки</span>
+        <button class="icon-btn" id="closeSidePanel" type="button" aria-label="Закрыть панель">×</button>
+      </div>
+      <section class="side-panel__section">
+        <h2>Тема</h2>
+        <div class="theme-switcher">
+          <button class="theme-btn active" data-theme-value="light" type="button">Светлая</button>
+          <button class="theme-btn" data-theme-value="dark" type="button">Тёмная</button>
+        </div>
+      </section>
+      <section class="side-panel__section">
+        <h2>Быстрые действия</h2>
+        <button class="secondary-btn full-width" id="adminLoginBtn" type="button">Вход в админ-панель</button>
+        <button class="secondary-btn full-width" id="openCartBtn" type="button">Открыть корзину</button>
+      </section>
+      <section class="side-panel__section">
+        <h2>Доставка</h2>
+        <textarea class="text-field textarea-field compact-textarea" id="deliveryAddress" placeholder="Укажите адрес получения"></textarea>
+        <input class="text-field" id="deliveryContact" type="text" placeholder="Телефон или @telegram">
+        <button class="secondary-btn full-width" id="saveAddressBtn" type="button">Сохранить данные</button>
+        <p class="muted-text" id="savedAddressNote">Для заказа нужны адрес и телефон либо Telegram.</p>
+      </section>
+    </aside>
+
+    <main class="main-content">
+      <header class="hero">
+        <div class="hero__topbar">
+          <button class="settings-toggle" id="openSidePanel" type="button" aria-label="Открыть настройки">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M7 12h10M10 17h4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"/>
+            </svg>
+          </button>
+          <div class="hero__actions">
+            <button class="cart-pill" id="heroCartBtn" type="button"><span>Корзина</span><strong id="cartCountBadge">0</strong></button>
+          </div>
+        </div>
+
+        <div class="brand">
+          <img src="images/unicorn-logo.svg" alt="Логотип VapeTrip" class="brand__logo">
+          <div>
+            <p class="eyebrow">вейп-шоп</p>
+            <h1>VapeTrip</h1>
+            <p class="hero__subtitle">Под-системы, жидкости и аксессуары в современном каталоге с быстрым управлением остатками.</p>
+          </div>
+        </div>
+
+        <div class="search-wrap">
+          <label for="searchInput" class="sr-only">Поиск товаров</label>
+          <input id="searchInput" class="search-input" type="search" placeholder="Найти товар, вкус или бренд">
+        </div>
+      </header>
+
+      <section class="filters">
+        <div class="filters__row" id="categoryFilters"></div>
+        <div class="filters__subrow" id="subFilters"></div>
+      </section>
+
+      <section class="catalog-section">
+        <div class="section-heading">
+          <div><span class="eyebrow">Каталог</span><h2>Товары в наличии</h2></div>
+          <p class="muted-text" id="catalogStats">0 товаров</p>
+        </div>
+        <div class="product-grid" id="productGrid"></div>
+      </section>
+
+      <footer class="site-footer">
+        <div class="site-footer__grid">
+          <div>
+            <span class="eyebrow">VapeTrip</span>
+            <h2>Информация для покупателей</h2>
+            <p class="muted-text">Продукция на сайте предназначена только для совершеннолетних покупателей 18+.</p>
+          </div>
+          <div>
+            <p class="muted-text">Никотиносодержащая продукция может нанести вред вашему здоровью. Перед использованием ознакомьтесь с характеристиками товара.</p>
+            <p class="muted-text">Оформляя заказ, покупатель подтверждает достижение совершеннолетнего возраста и корректность указанных контактных данных.</p>
+          </div>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <div class="overlay hidden" id="overlay"></div>
+  <div class="toast hidden" id="toast"></div>
+
+  <section class="drawer hidden" id="productModal" aria-hidden="true">
+    <div class="drawer__header">
+      <div><span class="eyebrow">Карточка товара</span><h2 id="productModalTitle">Товар</h2></div>
+      <button class="icon-btn" data-close-modal="productModal" type="button">×</button>
+    </div>
+    <div class="product-modal__content">
+      <div class="product-gallery" id="productGallery"></div>
+      <div class="product-details">
+        <p class="product-price" id="productModalPrice">0 ₽</p>
+        <p class="stock-badge" id="productModalStock">На складе: 0 шт.</p>
+        <p class="product-description" id="productModalDescription"></p>
+        <button class="primary-btn" id="productModalAddToCart" type="button">В корзину</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="drawer hidden" id="cartModal" aria-hidden="true">
+    <div class="drawer__header">
+      <div><span class="eyebrow">Корзина</span><h2>Ваш заказ</h2></div>
+      <button class="icon-btn" data-close-modal="cartModal" type="button">×</button>
+    </div>
+    <div class="cart-list" id="cartList"></div>
+    <div class="cart-summary">
+      <div class="cart-summary__row"><span>Итого</span><strong id="cartTotal">0 ₽</strong></div>
+      <p class="muted-text">Минимальная сумма заказа: 500 ₽.</p>
+      <p class="muted-text" id="cartAddressPreview">Адрес не указан.</p>
+      <p class="muted-text" id="cartContactPreview">Контакт не указан.</p>
+      <p class="warning-text hidden" id="cartWarning">Недостаточная сумма заказа</p>
+      <p class="warning-text hidden" id="addressWarning">Укажите адрес получения и телефон либо Telegram</p>
+      <button class="primary-btn full-width" id="checkoutBtn" type="button">Оплатить и отправить заказ</button>
+      <button class="secondary-btn full-width" id="clearCartBtn" type="button">Очистить корзину</button>
+    </div>
+  </section>
+
+  <section class="drawer hidden" id="welcomeModal" aria-hidden="true">
+    <div class="drawer__header">
+      <div><span class="eyebrow">Добро пожаловать</span><h2>VapeTrip</h2></div>
+      <button class="icon-btn" data-close-modal="welcomeModal" type="button">×</button>
+    </div>
+    <div class="product-details">
+      <p class="product-description">Минимальная сумма заказа составляет 500 ₽. Перед оплатой обязательно укажите адрес доставки в боковой панели через кнопку настроек.</p>
+      <button class="primary-btn" id="welcomeConfirmBtn" type="button">Понятно</button>
+    </div>
+  </section>
+
+  <section class="drawer hidden admin-panel" id="adminModal" aria-hidden="true">
+    <div class="drawer__header">
+      <div><span class="eyebrow">Админ-панель</span><h2>Управление каталогом</h2></div>
+      <button class="icon-btn" data-close-modal="adminModal" type="button">×</button>
+    </div>
+
+    <div id="adminLoginView">
+      <label class="field-label" for="adminPassword">Пароль</label>
+      <input class="text-field" id="adminPassword" type="password" placeholder="Введите пароль">
+      <button class="primary-btn full-width" id="adminSubmitBtn" type="button">Войти</button>
+    </div>
+
+    <div class="hidden" id="adminDashboard">
+      <section class="admin-hero">
+        <div>
+          <span class="eyebrow">Управление</span>
+          <h3>Редактирование каталога и отчётов</h3>
+          <p class="muted-text">Меняйте цены, остатки, описания, добавляйте новые позиции и выгружайте отчёт по заказам.</p>
+        </div>
+      </section>
+      <div class="admin-toolbar">
+        <button class="primary-btn" id="showAddProductFormBtn" type="button">Добавить товар</button>
+        <button class="secondary-btn" id="exportReportsBtn" type="button">Скачать CSV отчёт</button>
+      </div>
+
+      <form class="admin-form hidden" id="addProductForm">
+        <h3>Новый товар</h3>
+        <div class="admin-grid">
+          <input class="text-field" id="newProductName" type="text" placeholder="Название">
+          <input class="text-field" id="newProductCategory" type="text" placeholder="Категория">
+          <input class="text-field" id="newProductSubcategory" type="text" placeholder="Подкатегория">
+          <input class="text-field" id="newProductPrice" type="number" min="0" placeholder="Цена">
+          <input class="text-field" id="newProductStock" type="number" min="0" placeholder="Остаток">
+          <input class="text-field" id="newProductImage" type="text" placeholder="Путь к фото">
+        </div>
+        <textarea class="text-field textarea-field" id="newProductDescription" placeholder="Описание"></textarea>
+        <button class="primary-btn" id="addProductBtn" type="button">Сохранить товар</button>
+      </form>
+
+      <div class="admin-products" id="adminProducts"></div>
+
+      <section class="reports-panel">
+        <div class="section-heading">
+          <div><span class="eyebrow">Отчёты</span><h3>История оплат</h3></div>
+          <strong id="revenueTotal">0 ₽</strong>
+        </div>
+        <div class="report-table-wrap">
+          <table class="report-table">
+            <thead><tr><th>Дата</th><th>Заказ</th><th>Сумма</th><th>Статус</th></tr></thead>
+            <tbody id="reportTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <template id="productCardTemplate">
+    <article class="product-card">
+      <button class="product-card__media" type="button"></button>
+      <div class="product-card__body">
+        <p class="product-card__category"></p>
+        <h3 class="product-card__title"></h3>
+        <div class="product-card__meta"><span class="product-card__price"></span><span class="product-card__stock"></span></div>
+        <button class="primary-btn product-card__action" type="button">Подробнее</button>
+      </div>
+    </article>
+  </template>
+
+  <template id="cartItemTemplate">
+    <article class="cart-item">
+      <div><h3 class="cart-item__title"></h3><p class="cart-item__meta"></p></div>
+      <div class="cart-item__actions">
+        <div class="qty-control">
+          <button class="qty-btn" data-action="decrease" type="button">−</button>
+          <span class="qty-value"></span>
+          <button class="qty-btn" data-action="increase" type="button">+</button>
+        </div>
+        <strong class="cart-item__sum"></strong>
+      </div>
+    </article>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+</html>
