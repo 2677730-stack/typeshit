@@ -12,8 +12,8 @@ const ADMIN_PASSWORD = "83404";
 const MIN_ORDER_TOTAL = 500;
 
 const TELEGRAM_CONFIG = {
-  botToken: process.env.botToken,
-  chatId: process.env.chatId,
+  botToken: "BT",
+  chatId: "CID",
   customMessage: "Новый заказ с сайта VapeTrip"
 };
 
