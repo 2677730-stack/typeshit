@@ -169,7 +169,7 @@ const els = {
   productModalTitle: document.getElementById("productModalTitle"),
   productGallery: document.getElementById("productGallery"),
   productModalPrice: document.getElementById("productModalPrice"),
-    productModalDescription: document.getElementById("productModalDescription"),
+  productModalDescription: document.getElementById("productModalDescription"),
   productModalAddToCart: document.getElementById("productModalAddToCart"),
   cartModal: document.getElementById("cartModal"),
   cartList: document.getElementById("cartList"),
@@ -852,7 +852,7 @@ function saveAddress() {
   persist(STORAGE_KEYS.address, state.address);
   persist(STORAGE_KEYS.contact, state.contact);
   syncAddressUi();
-  renderCart();
+  els.addressWarning.classList.add("hidden");
 }
 
 function handleFloatingFiltersVisibility() {
@@ -889,4 +889,3 @@ function showToast(message) {
     setTimeout(() => els.toast.classList.add("hidden"), 240);
   }, 2200);
 }
-
