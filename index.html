@@ -19,21 +19,18 @@
       <section class="side-panel__section">
         <h2>Тема</h2>
         <div class="theme-switcher">
-          <button class="theme-btn active" data-theme-value="light" type="button">Светлая</button>
-          <button class="theme-btn" data-theme-value="dark" type="button">Тёмная</button>
+          <button class="theme-btn" data-theme-value="light" type="button">Светлая</button>
+          <button class="theme-btn active" data-theme-value="dark" type="button">Тёмная</button>
         </div>
       </section>
       <section class="side-panel__section">
         <h2>Быстрые действия</h2>
-        <button class="secondary-btn full-width" id="adminLoginBtn" type="button">Вход в админ-панель</button>
         <button class="secondary-btn full-width" id="openCartBtn" type="button">Открыть корзину</button>
       </section>
       <section class="side-panel__section">
-        <h2>Доставка</h2>
-        <textarea class="text-field textarea-field compact-textarea" id="deliveryAddress" placeholder="Укажите адрес получения"></textarea>
-        <input class="text-field" id="deliveryContact" type="text" placeholder="Телефон или @telegram">
-        <button class="secondary-btn full-width" id="saveAddressBtn" type="button">Сохранить данные</button>
-        <p class="muted-text" id="savedAddressNote">Для заказа нужны адрес и телефон либо Telegram.</p>
+        <h2>Сервис</h2>
+        <button class="service-access-btn full-width" id="adminLoginBtn" type="button">Служебный доступ</button>
+        <p class="muted-text">Панель управления каталогом и отчётами.</p>
       </section>
     </aside>
 
@@ -53,9 +50,7 @@
         <div class="brand">
           <img src="images/unicorn-logo.svg" alt="Логотип VapeTrip" class="brand__logo">
           <div>
-            <p class="eyebrow">вейп-шоп</p>
             <h1>VapeTrip</h1>
-            <p class="hero__subtitle">Под-системы, жидкости и аксессуары в современном каталоге с быстрым управлением остатками.</p>
           </div>
         </div>
 
@@ -69,6 +64,7 @@
         <div class="filters__row" id="categoryFilters"></div>
         <div class="filters__subrow" id="subFilters"></div>
       </section>
+      <div class="floating-filters hidden" id="floatingFilters"></div>
 
       <section class="catalog-section">
         <div class="section-heading">
@@ -106,7 +102,6 @@
       <div class="product-gallery" id="productGallery"></div>
       <div class="product-details">
         <p class="product-price" id="productModalPrice">0 ₽</p>
-        <p class="stock-badge" id="productModalStock">На складе: 0 шт.</p>
         <p class="product-description" id="productModalDescription"></p>
         <button class="primary-btn" id="productModalAddToCart" type="button">В корзину</button>
       </div>
@@ -122,8 +117,9 @@
     <div class="cart-summary">
       <div class="cart-summary__row"><span>Итого</span><strong id="cartTotal">0 ₽</strong></div>
       <p class="muted-text">Минимальная сумма заказа: 500 ₽.</p>
-      <p class="muted-text" id="cartAddressPreview">Адрес не указан.</p>
-      <p class="muted-text" id="cartContactPreview">Контакт не указан.</p>
+      <textarea class="text-field textarea-field compact-textarea" id="deliveryAddress" placeholder="Укажите адрес получения"></textarea>
+      <input class="text-field" id="deliveryContact" type="text" placeholder="Телефон или @telegram">
+      <p class="muted-text" id="savedAddressNote">Для заказа нужны адрес и телефон либо Telegram.</p>
       <p class="warning-text hidden" id="cartWarning">Недостаточная сумма заказа</p>
       <p class="warning-text hidden" id="addressWarning">Укажите адрес получения и телефон либо Telegram</p>
       <button class="primary-btn full-width" id="checkoutBtn" type="button">Оплатить и отправить заказ</button>
@@ -137,7 +133,7 @@
       <button class="icon-btn" data-close-modal="welcomeModal" type="button">×</button>
     </div>
     <div class="product-details">
-      <p class="product-description">Минимальная сумма заказа составляет 500 ₽. Перед оплатой обязательно укажите адрес доставки в боковой панели через кнопку настроек.</p>
+      <p class="product-description">Минимальная сумма заказа составляет 500 ₽. Перед оплатой обязательно укажите адрес доставки и телефон либо Telegram прямо внутри корзины.</p>
       <button class="primary-btn" id="welcomeConfirmBtn" type="button">Понятно</button>
     </div>
   </section>
@@ -176,6 +172,7 @@
           <input class="text-field" id="newProductPrice" type="number" min="0" placeholder="Цена">
           <input class="text-field" id="newProductStock" type="number" min="0" placeholder="Остаток">
           <input class="text-field" id="newProductImage" type="text" placeholder="Путь к фото">
+          <input class="text-field" id="newProductGallery" type="text" placeholder="Доп. фото через запятую">
         </div>
         <textarea class="text-field textarea-field" id="newProductDescription" placeholder="Описание"></textarea>
         <button class="primary-btn" id="addProductBtn" type="button">Сохранить товар</button>
@@ -204,7 +201,7 @@
       <div class="product-card__body">
         <p class="product-card__category"></p>
         <h3 class="product-card__title"></h3>
-        <div class="product-card__meta"><span class="product-card__price"></span><span class="product-card__stock"></span></div>
+        <div class="product-card__meta"><span class="product-card__price"></span></div>
         <button class="primary-btn product-card__action" type="button">Подробнее</button>
       </div>
     </article>

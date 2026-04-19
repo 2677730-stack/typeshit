@@ -1,4 +1,4 @@
-const STORAGE_KEYS = {
+﻿const STORAGE_KEYS = {
   products: "vapetrip-products",
   cart: "vapetrip-cart",
   theme: "vapetrip-theme",
@@ -8,12 +8,18 @@ const STORAGE_KEYS = {
   welcomeSeen: "vapetrip-welcome-seen"
 };
 
-const ADMIN_PASSWORD = "83404";
+const ADMIN_PASSWORD = "PASTE_LOCAL_ADMIN_PASSWORD_HERE";
 const MIN_ORDER_TOTAL = 500;
 
+const DEPLOYMENT_CONFIG = {
+  secureMode: true,
+  orderApiUrl: "/.netlify/functions/order",
+  adminAuthApiUrl: "/.netlify/functions/admin-auth"
+};
+
 const TELEGRAM_CONFIG = {
-  botToken: "BT",
-  chatId: "CID",
+  botToken: "PASTE_TELEGRAM_BOT_TOKEN_HERE",
+  chatId: "PASTE_TELEGRAM_CHAT_ID_HERE",
   customMessage: "Новый заказ с сайта VapeTrip"
 };
 
@@ -154,6 +160,7 @@ const els = {
   productGrid: document.getElementById("productGrid"),
   categoryFilters: document.getElementById("categoryFilters"),
   subFilters: document.getElementById("subFilters"),
+  floatingFilters: document.getElementById("floatingFilters"),
   searchInput: document.getElementById("searchInput"),
   catalogStats: document.getElementById("catalogStats"),
   heroCartBtn: document.getElementById("heroCartBtn"),
@@ -162,14 +169,11 @@ const els = {
   productModalTitle: document.getElementById("productModalTitle"),
   productGallery: document.getElementById("productGallery"),
   productModalPrice: document.getElementById("productModalPrice"),
-  productModalStock: document.getElementById("productModalStock"),
-  productModalDescription: document.getElementById("productModalDescription"),
+    productModalDescription: document.getElementById("productModalDescription"),
   productModalAddToCart: document.getElementById("productModalAddToCart"),
   cartModal: document.getElementById("cartModal"),
   cartList: document.getElementById("cartList"),
   cartTotal: document.getElementById("cartTotal"),
-  cartAddressPreview: document.getElementById("cartAddressPreview"),
-  cartContactPreview: document.getElementById("cartContactPreview"),
   cartWarning: document.getElementById("cartWarning"),
   addressWarning: document.getElementById("addressWarning"),
   checkoutBtn: document.getElementById("checkoutBtn"),
@@ -189,6 +193,7 @@ const els = {
   newProductPrice: document.getElementById("newProductPrice"),
   newProductStock: document.getElementById("newProductStock"),
   newProductImage: document.getElementById("newProductImage"),
+  newProductGallery: document.getElementById("newProductGallery"),
   newProductDescription: document.getElementById("newProductDescription"),
   reportTableBody: document.getElementById("reportTableBody"),
   revenueTotal: document.getElementById("revenueTotal"),
@@ -198,12 +203,12 @@ const els = {
   sidePanel: document.getElementById("sidePanel"),
   deliveryAddress: document.getElementById("deliveryAddress"),
   deliveryContact: document.getElementById("deliveryContact"),
-  saveAddressBtn: document.getElementById("saveAddressBtn"),
   savedAddressNote: document.getElementById("savedAddressNote"),
   welcomeConfirmBtn: document.getElementById("welcomeConfirmBtn")
 };
 
 const modalIds = ["productModal", "cartModal", "adminModal", "welcomeModal"];
+let lastScrollY = window.scrollY;
 
 init();
 
@@ -243,7 +248,6 @@ function bindEvents() {
   els.showAddProductFormBtn.addEventListener("click", () => els.addProductForm.classList.toggle("hidden"));
   els.addProductBtn.addEventListener("click", handleAddProduct);
   els.exportReportsBtn.addEventListener("click", exportReportsToCsv);
-  els.saveAddressBtn.addEventListener("click", saveAddress);
   els.welcomeConfirmBtn.addEventListener("click", () => {
     persist(STORAGE_KEYS.welcomeSeen, true);
     closeAllModals();
@@ -267,40 +271,23 @@ function bindEvents() {
       els.sidePanel.classList.remove("is-open");
     }
   });
+
+  els.deliveryAddress.addEventListener("input", saveAddress);
+  els.deliveryContact.addEventListener("input", saveAddress);
+
+  window.addEventListener("scroll", handleFloatingFiltersVisibility, { passive: true });
 }
 
 function renderFilters() {
-  els.categoryFilters.innerHTML = "";
-  CATEGORY_FILTERS.forEach((filter) => {
-    const button = document.createElement("button");
-    button.className = `filter-btn ${state.currentCategory === filter.key ? "active" : ""}`;
-    button.type = "button";
-    button.textContent = filter.label;
-    button.addEventListener("click", () => {
-      state.currentCategory = filter.key;
-      state.currentSubcategory = "all";
-      renderFilters();
-      renderProducts();
-    });
-    els.categoryFilters.appendChild(button);
-  });
+  renderFilterGroup(els.categoryFilters, CATEGORY_FILTERS, false);
+  renderFilterGroup(els.floatingFilters, CATEGORY_FILTERS, true);
 
   els.subFilters.innerHTML = "";
   const subFilterSet = SUB_FILTERS[state.currentCategory];
   if (!subFilterSet) return;
 
-  const allButton = document.createElement("button");
-  allButton.className = `filter-btn ${state.currentSubcategory === "all" ? "active" : ""}`;
-  allButton.type = "button";
-  allButton.textContent = "Все подфильтры";
-  allButton.addEventListener("click", () => {
-    state.currentSubcategory = "all";
-    renderFilters();
-    renderProducts();
-  });
-  els.subFilters.appendChild(allButton);
-
-  subFilterSet.forEach((filter) => {
+  const filters = [{ key: "all", label: "Все подфильтры" }, ...subFilterSet];
+  filters.forEach((filter) => {
     const button = document.createElement("button");
     button.className = `filter-btn ${state.currentSubcategory === filter.key ? "active" : ""}`;
     button.type = "button";
@@ -311,6 +298,26 @@ function renderFilters() {
       renderProducts();
     });
     els.subFilters.appendChild(button);
+  });
+}
+
+function renderFilterGroup(container, filters, isFloating) {
+  container.innerHTML = "";
+  filters.forEach((filter) => {
+    const button = document.createElement("button");
+    button.className = `filter-btn ${state.currentCategory === filter.key ? "active" : ""}`;
+    button.type = "button";
+    button.textContent = filter.label;
+    button.addEventListener("click", () => {
+      state.currentCategory = filter.key;
+      state.currentSubcategory = "all";
+      renderFilters();
+      renderProducts();
+      if (isFloating) {
+        window.scrollTo({ top: document.querySelector(".filters").offsetTop - 12, behavior: "smooth" });
+      }
+    });
+    container.appendChild(button);
   });
 }
 
@@ -336,7 +343,6 @@ function renderProducts() {
     card.querySelector(".product-card__category").textContent = product.categoryLabel;
     card.querySelector(".product-card__title").textContent = product.name;
     card.querySelector(".product-card__price").textContent = formatPrice(product.price);
-    card.querySelector(".product-card__stock").textContent = `Остаток: ${product.stock}`;
     card.querySelector(".product-card__action").addEventListener("click", () => openProduct(product.id));
     els.productGrid.appendChild(card);
   });
@@ -368,8 +374,6 @@ function renderCart() {
   const total = getCartTotal();
   els.cartTotal.textContent = formatPrice(total);
   els.cartCountBadge.textContent = String(state.cart.reduce((sum, item) => sum + item.quantity, 0));
-  els.cartAddressPreview.textContent = state.address ? `Адрес получения: ${state.address}` : "Адрес не указан.";
-  els.cartContactPreview.textContent = state.contact ? `Контакт: ${state.contact}` : "Контакт не указан.";
   els.cartWarning.classList.toggle("hidden", !state.cart.length || total >= MIN_ORDER_TOTAL);
   els.addressWarning.classList.add("hidden");
 }
@@ -462,7 +466,6 @@ function openProduct(productId) {
   state.selectedProductId = productId;
   els.productModalTitle.textContent = product.name;
   els.productModalPrice.textContent = formatPrice(product.price);
-  els.productModalStock.textContent = `На складе: ${product.stock} шт.`;
   els.productModalDescription.textContent = product.description;
   els.productGallery.innerHTML = "";
 
@@ -478,17 +481,9 @@ function openProduct(productId) {
 
 function addToCart(productId, sourceElement = null) {
   const product = state.products.find((item) => item.id === productId);
-  if (!product || product.stock <= 0) {
-    alert("Товар отсутствует на складе.");
-    return;
-  }
+  if (!product) return;
 
   const existing = state.cart.find((item) => item.productId === productId);
-  const currentQty = existing ? existing.quantity : 0;
-  if (currentQty >= product.stock) {
-    alert("Нельзя добавить больше, чем есть на складе.");
-    return;
-  }
 
   if (existing) existing.quantity += 1;
   else state.cart.push({ productId, quantity: 1 });
@@ -505,7 +500,6 @@ function updateCartQuantity(productId, delta) {
 
   cartItem.quantity += delta;
   if (cartItem.quantity <= 0) state.cart = state.cart.filter((item) => item.productId !== productId);
-  if (cartItem.quantity > product.stock) cartItem.quantity = product.stock;
   renderCart();
 }
 
@@ -581,6 +575,15 @@ async function checkout() {
 }
 
 async function sendOrderToTelegram(report) {
+  if (DEPLOYMENT_CONFIG.secureMode && DEPLOYMENT_CONFIG.orderApiUrl && !DEPLOYMENT_CONFIG.orderApiUrl.includes("PASTE_")) {
+    await fetch(DEPLOYMENT_CONFIG.orderApiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(report)
+    });
+    return;
+  }
+
   if (
     !TELEGRAM_CONFIG.botToken ||
     TELEGRAM_CONFIG.botToken.includes("PASTE_") ||
@@ -603,6 +606,7 @@ async function sendOrderToTelegram(report) {
 }
 
 async function sendOrderToGoogleSheets(report) {
+  if (DEPLOYMENT_CONFIG.secureMode) return;
   if (!REPORTS_CONFIG.googleAppsScriptUrl || REPORTS_CONFIG.googleAppsScriptUrl.includes("PASTE_")) return;
 
   await fetch(REPORTS_CONFIG.googleAppsScriptUrl, {
@@ -614,6 +618,11 @@ async function sendOrderToGoogleSheets(report) {
 }
 
 function handleAdminLogin() {
+  if (DEPLOYMENT_CONFIG.secureMode) {
+    authenticateAdminSecure();
+    return;
+  }
+
   if (els.adminPassword.value === ADMIN_PASSWORD) {
     state.adminAuthenticated = true;
     els.adminLoginView.classList.add("hidden");
@@ -631,6 +640,10 @@ function handleAddProduct() {
   const subcategoryRaw = els.newProductSubcategory.value.trim();
   const description = els.newProductDescription.value.trim();
   const image = els.newProductImage.value.trim() || "product-images/placeholder.svg";
+  const galleryExtra = els.newProductGallery.value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
   const price = Number(els.newProductPrice.value) || 0;
   const stock = Number(els.newProductStock.value) || 0;
 
@@ -650,7 +663,7 @@ function handleAddProduct() {
     stock,
     description,
     image,
-    gallery: [image]
+    gallery: [image, ...galleryExtra]
   };
 
   state.products.unshift(product);
@@ -689,6 +702,30 @@ function deleteProduct(productId) {
   showToast(`Товар "${product.name}" удалён`);
 }
 
+
+async function authenticateAdminSecure() {
+  if (!DEPLOYMENT_CONFIG.adminAuthApiUrl || DEPLOYMENT_CONFIG.adminAuthApiUrl.includes("PASTE_")) {
+    alert("Не настроен secure endpoint для админ-панели.");
+    return;
+  }
+
+  const response = await fetch(DEPLOYMENT_CONFIG.adminAuthApiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password: els.adminPassword.value })
+  });
+
+  if (!response.ok) {
+    alert("Неверный пароль.");
+    return;
+  }
+
+  state.adminAuthenticated = true;
+  els.adminLoginView.classList.add("hidden");
+  els.adminDashboard.classList.remove("hidden");
+  renderAdminProducts();
+  renderReports();
+}
 function openAdmin() {
   openModal("adminModal");
   if (state.adminAuthenticated) {
@@ -756,7 +793,7 @@ function setTheme(theme) {
 }
 
 function applySavedTheme() {
-  const theme = loadFromStorage(STORAGE_KEYS.theme, "light");
+  const theme = loadFromStorage(STORAGE_KEYS.theme, "dark");
   setTheme(theme);
 }
 
@@ -818,6 +855,14 @@ function saveAddress() {
   renderCart();
 }
 
+function handleFloatingFiltersVisibility() {
+  const currentY = window.scrollY;
+  const scrollingUp = currentY < lastScrollY;
+  const passedThreshold = currentY > 420;
+  els.floatingFilters.classList.toggle("hidden", !(scrollingUp && passedThreshold));
+  lastScrollY = currentY;
+}
+
 function syncAddressUi() {
   els.deliveryAddress.value = state.address;
   els.deliveryContact.value = state.contact;
@@ -844,3 +889,4 @@ function showToast(message) {
     setTimeout(() => els.toast.classList.add("hidden"), 240);
   }, 2200);
 }
+
