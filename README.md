@@ -1,31 +1,44 @@
 ﻿# VapeTrip
 
-VapeTrip теперь работает по схеме:
+VapeTrip теперь настроен под Netlify.
+
+Схема работы:
 
 - товары хранятся в Google Sheets
 - Google Apps Script отдаёт каталог и принимает заказы
-- Railway поднимает Node.js сервер
-- Railway скрывает Telegram token и другие секреты в environment variables
+- Netlify Functions скрывают Telegram token и обращаются к Apps Script
+- сайт как статический фронтенд получает товары через `/.netlify/functions/products`
 
 ## Основные файлы
 
 - `index.html` — разметка сайта
 - `style.css` — стили
-- `script.js` — клиентская логика каталога, корзины и фильтров
-- `server.js` — сервер Railway
+- `script.js` — логика каталога и корзины
+- `netlify.toml` — конфигурация Netlify
+- `netlify/functions/products.js` — загрузка каталога из Google Sheets
+- `netlify/functions/order.js` — отправка заказа в Telegram и Google Sheets
 - `GOOGLE-APPS-SCRIPT.gs` — код для Google Apps Script
 - `.env.example` — шаблон env переменных
-- `RAILWAY-CHECKLIST.md` — пошаговый деплой
+- `NETLIFY-CHECKLIST.md` — пошаговый deploy на Netlify
 
-## Как теперь работают товары
+## Как работают товары
 
-Сайт больше не берёт каталог из встроенной админки.
+Сайт делает запрос:
 
-Он делает запрос:
+- `GET /.netlify/functions/products`
 
-- `GET /api/products`
+Эта функция получает данные из Google Apps Script и возвращает JSON каталога.
 
-Сервер Railway берёт данные из `GOOGLE_APPS_SCRIPT_URL` и отдаёт их на сайт.
+## Как отправляется заказ
+
+Сайт делает запрос:
+
+- `POST /.netlify/functions/order`
+
+Функция:
+
+- отправляет заказ в Telegram
+- записывает заказ в Google Sheets
 
 ## Структура Google Sheets
 
@@ -40,56 +53,52 @@ active | id | name | category | categoryLabel | subcategory | subcategoryLabel |
 ### Что писать в колонках
 
 - `active` — `TRUE` или `FALSE`
-- `id` — любой уникальный id, например `pod-mini-air`
+- `id` — уникальный id, например `pod-mini-air`
 - `name` — название товара
 - `category` — системное имя категории
-- `categoryLabel` — название категории для сайта
+- `categoryLabel` — подпись категории
 - `subcategory` — системное имя подкатегории
-- `subcategoryLabel` — название подкатегории для сайта
+- `subcategoryLabel` — подпись подкатегории
 - `price` — цена числом
 - `stock` — остаток
-- `description` — описание товара
-- `image` — путь к основной картинке
+- `description` — описание
+- `image` — основная картинка
 - `gallery` — дополнительные картинки через запятую
 
-## Как загружать фото для товаров
+## Как загружать фото в таблицу
 
-### Вариант 1. Хранить фото прямо в проекте
+Самый удобный вариант для этого проекта:
 
-Загрузи картинки в папку:
+1. Загружаешь фото в папку `product-images/`
+2. В таблице вставляешь пути к ним
 
-- `product-images/`
-
-И в таблице указывай так:
+Пример:
 
 ```text
 image = product-images/item-main.jpg
 gallery = product-images/item-1.jpg, product-images/item-2.jpg, product-images/item-3.jpg
 ```
 
-Это самый удобный вариант для твоего проекта.
-
-### Вариант 2. Использовать внешние ссылки
-
-Можно вставлять прямые URL:
+Можно и прямые URL:
 
 ```text
 image = https://example.com/item-main.jpg
 gallery = https://example.com/1.jpg, https://example.com/2.jpg
 ```
 
-## Как отправляется заказ
+## Где менять текст про доставку
 
-Сайт отправляет заказ на:
+Ищи в `index.html` элемент:
 
-- `POST /api/order`
+- `id="deliveryInfoText"`
 
-Сервер Railway:
+Сейчас там текст:
 
-- отправляет заказ в Telegram
-- записывает заказ в Google Sheets через Apps Script
+```text
+Есть доставка до метро и самовывоз.
+```
 
-## Какие переменные нужны в Railway
+## Какие переменные нужны в Netlify
 
 Смотри `.env.example`
 
@@ -99,27 +108,15 @@ gallery = https://example.com/1.jpg, https://example.com/2.jpg
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
 - `TELEGRAM_CUSTOM_MESSAGE`
-- `PORT`
 
-## Где менять текст про доставку
+## Где настраивать Netlify
 
-Текст корзины:
+Подробно:
 
-- ищи в `index.html` элемент с `id="deliveryInfoText"`
+- смотри `NETLIFY-CHECKLIST.md`
 
-Сейчас там написано:
+## Важно
 
-```text
-Есть доставка до метро и самовывоз.
-```
-
-## Тема сайта
-
-По умолчанию включена тёмная тема.
-Светлая включается только после выбора пользователем.
-
-## Деплой
-
-Полная инструкция:
-
-- смотри `RAILWAY-CHECKLIST.md`
+- переменные из `netlify.toml` недоступны Netlify Functions runtime, поэтому секреты задаются только в UI Netlify environment variables
+- если Telegram token уже светился публично, перевыпусти его через `@BotFather`
+- В проекте используется только Netlify-сценарий deploy

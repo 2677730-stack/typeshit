@@ -1,4 +1,4 @@
-exports.handler = async function(event) {
+﻿exports.handler = async function(event) {
   if (event.httpMethod !== "POST") {
     return response(405, { error: "Method not allowed" });
   }
@@ -37,7 +37,10 @@ exports.handler = async function(event) {
       await fetch(GOOGLE_APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          action: "order",
+          ...payload
+        })
       });
     }
 

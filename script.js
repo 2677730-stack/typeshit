@@ -165,7 +165,7 @@ function bindEvents() {
 
 async function loadProducts() {
   try {
-    const response = await fetch("/api/products", { cache: "no-store" });
+    const response = await fetch("/.netlify/functions/products", { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     const products = Array.isArray(payload.products) ? payload.products : [];
@@ -390,7 +390,7 @@ async function checkout() {
   };
 
   try {
-    const response = await fetch("/api/order", {
+    const response = await fetch("/.netlify/functions/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
