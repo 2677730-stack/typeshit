@@ -1,4 +1,4 @@
-﻿# Netlify Checklist For VapeTrip
+# Netlify Checklist For VapeTrip
 
 ## 1. Что нужно в проекте
 

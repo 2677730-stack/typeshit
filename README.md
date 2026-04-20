@@ -1,4 +1,4 @@
-﻿# VapeTrip
+# VapeTrip
 
 VapeTrip теперь настроен под Netlify.
 

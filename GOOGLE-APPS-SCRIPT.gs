@@ -1,4 +1,4 @@
-﻿function doGet(e) {
+function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || '';
 
   if (action === 'products') {

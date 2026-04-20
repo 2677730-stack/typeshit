@@ -1,4 +1,4 @@
-﻿const STORAGE_KEYS = {
+const STORAGE_KEYS = {
   cart: "vapetrip-cart",
   theme: "vapetrip-theme",
   address: "vapetrip-address",
