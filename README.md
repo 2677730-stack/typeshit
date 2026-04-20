@@ -1,188 +1,125 @@
-# VapeTrip
+﻿# VapeTrip
 
-Готовый адаптивный сайт для вейп-шопа с:
+VapeTrip теперь работает по схеме:
 
-- каталогом товаров
-- поиском и фильтрами
-- карточкой товара
-- корзиной
-- админ-панелью
-- локальным хранением данных
-- отправкой заказов через Netlify Functions
-- поддержкой Telegram и Google Sheets
+- товары хранятся в Google Sheets
+- Google Apps Script отдаёт каталог и принимает заказы
+- Railway поднимает Node.js сервер
+- Railway скрывает Telegram token и другие секреты в environment variables
 
-## Структура проекта
+## Основные файлы
 
-- `index.html` — основная разметка сайта
-- `style.css` — стили сайта
-- `script.js` — логика каталога, корзины, фильтров и админки
-- `images/` — логотип и общие изображения
-- `product-images/` — фото товаров
-- `netlify/functions/order.js` — серверная функция отправки заказа
-- `netlify/functions/admin-auth.js` — серверная функция проверки пароля админки
-- `netlify.toml` — конфигурация Netlify
-- `.env.example` — шаблон переменных окружения
-- `NETLIFY-CHECKLIST.md` — пошаговый деплой на Netlify
+- `index.html` — разметка сайта
+- `style.css` — стили
+- `script.js` — клиентская логика каталога, корзины и фильтров
+- `server.js` — сервер Railway
+- `GOOGLE-APPS-SCRIPT.gs` — код для Google Apps Script
+- `.env.example` — шаблон env переменных
+- `RAILWAY-CHECKLIST.md` — пошаговый деплой
 
-## Что умеет сайт
+## Как теперь работают товары
 
-- Показывает каталог товаров
-- Открывает модальное окно товара с галереей фото
-- Добавляет товары в корзину с анимацией
-- Сохраняет адрес и контакт покупателя
-- Проверяет минимальную сумму заказа 500 ₽
-- Даёт редактировать каталог через админ-панель
-- Позволяет удалять товары
-- Ведёт локальный CSV-отчёт
+Сайт больше не берёт каталог из встроенной админки.
 
-## Где редактировать товары
+Он делает запрос:
 
-Демо-товары находятся в `script.js` в массиве `defaultProducts`.
+- `GET /api/products`
 
-У каждого товара есть поля:
+Сервер Railway берёт данные из `GOOGLE_APPS_SCRIPT_URL` и отдаёт их на сайт.
 
-- `name`
-- `category`
-- `categoryLabel`
-- `subcategory`
-- `subcategoryLabel`
-- `price`
-- `stock`
-- `description`
-- `image`
-- `gallery`
+## Структура Google Sheets
 
-Пример:
+### Лист `Products`
 
-```js
-{
-  id: crypto.randomUUID(),
-  name: "VapeTrip Mini Air",
-  category: "pod-systems",
-  categoryLabel: "Под-системы",
-  subcategory: "under-50",
-  subcategoryLabel: "до 50 ватт",
-  price: 2390,
-  stock: 12,
-  description: "Описание товара",
-  image: "product-images/pod-mini.svg",
-  gallery: [
-    "product-images/pod-mini.svg",
-    "product-images/pod-plus.svg"
-  ]
-}
-```
-
-## Как добавлять фото товара
-
-### Основное фото
-
-Указывается в поле:
-
-```js
-image: "product-images/my-product.jpg"
-```
-
-### Дополнительные фото в карточке товара
-
-Указываются в массиве:
-
-```js
-gallery: [
-  "product-images/my-product-1.jpg",
-  "product-images/my-product-2.jpg",
-  "product-images/my-product-3.jpg"
-]
-```
-
-Когда пользователь нажимает на товар, изображения из `gallery` показываются в модальном окне.
-
-## Как добавить новый товар через админку
-
-В админ-панели можно:
-
-- указать название
-- указать категорию
-- указать подкатегорию
-- указать цену
-- указать остаток
-- указать путь к основному фото
-- указать дополнительные фото через запятую
-- указать описание
-
-Пример для поля дополнительных фото:
+Заголовки:
 
 ```text
-product-images/item-1.jpg, product-images/item-2.jpg, product-images/item-3.jpg
+active | id | name | category | categoryLabel | subcategory | subcategoryLabel | price | stock | description | image | gallery
 ```
 
-## Как работает админка
+### Что писать в колонках
 
-Админ-панель открывается через кнопку `Служебный доступ`.
+- `active` — `TRUE` или `FALSE`
+- `id` — любой уникальный id, например `pod-mini-air`
+- `name` — название товара
+- `category` — системное имя категории
+- `categoryLabel` — название категории для сайта
+- `subcategory` — системное имя подкатегории
+- `subcategoryLabel` — название подкатегории для сайта
+- `price` — цена числом
+- `stock` — остаток
+- `description` — описание товара
+- `image` — путь к основной картинке
+- `gallery` — дополнительные картинки через запятую
 
-Внутри можно:
+## Как загружать фото для товаров
 
-- менять цену
-- менять остаток
-- менять описание
-- добавлять товар
-- удалять товар
-- выгружать CSV-отчёт
+### Вариант 1. Хранить фото прямо в проекте
 
-## Хранение данных
+Загрузи картинки в папку:
 
-Сайт хранит локальные данные в `localStorage`:
+- `product-images/`
 
-- товары
-- корзину
-- тему
-- адрес
-- контакт
-- отчёты
+И в таблице указывай так:
 
-## Telegram и Google Sheets
+```text
+image = product-images/item-main.jpg
+gallery = product-images/item-1.jpg, product-images/item-2.jpg, product-images/item-3.jpg
+```
 
-В продакшене отправка идёт через Netlify Functions, а не напрямую из браузера.
+Это самый удобный вариант для твоего проекта.
 
-Используются переменные окружения:
+### Вариант 2. Использовать внешние ссылки
 
-- `ADMIN_PANEL_PASSWORD`
+Можно вставлять прямые URL:
+
+```text
+image = https://example.com/item-main.jpg
+gallery = https://example.com/1.jpg, https://example.com/2.jpg
+```
+
+## Как отправляется заказ
+
+Сайт отправляет заказ на:
+
+- `POST /api/order`
+
+Сервер Railway:
+
+- отправляет заказ в Telegram
+- записывает заказ в Google Sheets через Apps Script
+
+## Какие переменные нужны в Railway
+
+Смотри `.env.example`
+
+Нужны:
+
+- `GOOGLE_APPS_SCRIPT_URL`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
 - `TELEGRAM_CUSTOM_MESSAGE`
-- `GOOGLE_APPS_SCRIPT_URL`
+- `PORT`
 
-Смотри:
+## Где менять текст про доставку
 
-- `.env.example`
-- `NETLIFY-CHECKLIST.md`
+Текст корзины:
 
-## Деплой на Netlify
+- ищи в `index.html` элемент с `id="deliveryInfoText"`
 
-Коротко:
+Сейчас там написано:
 
-1. Загрузи проект в GitHub.
-2. Подключи репозиторий в Netlify.
-3. Добавь Environment Variables.
-4. Сделай deploy.
-
-Подробно:
-
-- смотри `NETLIFY-CHECKLIST.md`
-
-## Важно по безопасности
-
-- Не храни реальные токены в `script.js`
-- Не коммить реальные секреты в GitHub
-- Если Telegram токен уже попадал в код, перевыпусти его через `@BotFather`
-
-## Локальный запуск
-
-Если нужен локальный запуск через Netlify Dev:
-
-```bash
-npm install -g netlify-cli
-netlify dev
+```text
+Есть доставка до метро и самовывоз.
 ```
 
-Или просто открой `index.html`, если не тестируешь серверные функции.
+## Тема сайта
+
+По умолчанию включена тёмная тема.
+Светлая включается только после выбора пользователем.
+
+## Деплой
+
+Полная инструкция:
+
+- смотри `RAILWAY-CHECKLIST.md`
